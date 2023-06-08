@@ -18,10 +18,8 @@ jobs:
     - name: Extract metadata (tags, labels) for Docker
       id: meta
       uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
-      env:
-        DOCKERHUB_USER: ${{secrets.DOCKERHUB_USER}}
       with:
-        images: $DOCKERHUB_USER/go-to-typescript
+        images: ${{secrets.DOCKERHUB_USER}}/go-to-typescript
     
     - name: Build and push Docker image
       uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671
