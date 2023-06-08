@@ -19,4 +19,4 @@ jobs:
     - name: Push to docker hub
       env:
         DOCKERHUB_USER: ${{secrets.DOCKERHUB_USER}}
-      run: docker push $DOCKERHUB_USER/go-to-typescript
+      run: docker push $DOCKERHUB_USER/go-to-typescript:latest
