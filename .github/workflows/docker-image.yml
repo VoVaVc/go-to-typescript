@@ -15,7 +15,7 @@ jobs:
         DOCKERHUB_PASSWORD: ${{secrets.DOCKERHUB_PASSWORD}}
       run: echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USER --password-stdin
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag go-to-typescript:$(date +%s)
+      run: docker build . --file Dockerfile --tag go-to-typescript
     - name: Push to docker hub
       env:
         DOCKERHUB_USER: ${{secrets.DOCKERHUB_USER}}
