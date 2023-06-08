@@ -9,14 +9,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - name: docker hub login
+    - name: Log in to Docker Hub
+      uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a
+      with:
+        username: ${{ secrets.DOCKERHUB_USER }}
+        password: ${{ secrets.DOCKERHUB_PASSWORD }}
+    
+    - name: Extract metadata (tags, labels) for Docker
+      id: meta
+      uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
       env:
         DOCKERHUB_USER: ${{secrets.DOCKERHUB_USER}}
-        DOCKERHUB_PASSWORD: ${{secrets.DOCKERHUB_PASSWORD}}
-      run: echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USER --password-stdin
-    - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag go-to-typescript
-    - name: Push to docker hub
-      env:
-        DOCKERHUB_USER: ${{secrets.DOCKERHUB_USER}}
-      run: docker push $DOCKERHUB_USER/go-to-typescript:latest
+      with:
+        images: $DOCKERHUB_USER/go-to-typescript
+    
+    - name: Build and push Docker image
+      uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671
+      with:
+        context: .
+        file: ./Dockerfile
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
