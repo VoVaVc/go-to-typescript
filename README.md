@@ -6,9 +6,12 @@ Based on [typescriptify-golang-structs](https://github.com/tkrajina/typescriptif
 
 * `INPUT_FOLDER` - Path to the folder with .go files containing structs
 * `OUTPUT_FILE` - Path for typescript file to be generated. For example `/src/types` will be processed to `/src/types.ts`
-## Usage with docker compose
+
+## Usage with docker-compose.yml
 
 ```yaml
+version: "3.9"
+services:
     generate-types:
         image: vovavc/go-to-typescript
         volumes:
