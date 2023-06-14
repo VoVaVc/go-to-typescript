@@ -33,11 +33,49 @@ type Params struct {
 	Imports     []string
 	Structs     []string
 	StructNames []string
-	Output      string
+	Envs        EnvVars
+}
+
+type EnvVars struct {
+	Output            string
+	Prefix            string
+	Suffix            string
+	Indent            string
+	CreateFromMethod  bool
+	CreateConstructor bool
+	BackupDir         string
+	DontExport        bool
+	CreateInterface   bool
+}
+
+func env(name string) string {
+	str := os.Getenv(name)
+	if len(str) < 1 {
+		return "\"\""
+	} else {
+		return fmt.Sprintf("\"%s\"", str)
+	}
 }
 
 func main() {
 	var params Params
+	ident := os.Getenv("IDENT")
+	if len(ident) < 1 {
+		// set default identation to tab
+		ident = "\"\t\""
+	}
+
+	envs := EnvVars{
+		Output:            os.Getenv("OUTPUT_FILE"),
+		Prefix:            env("PREFIX"),
+		Suffix:            env("SUFFIX"),
+		Indent:            ident,
+		CreateFromMethod:  os.Getenv("CREATE_FROM_METHOD") == "true",
+		CreateConstructor: os.Getenv("CREATE_CONSTRUCTOR") == "true",
+		BackupDir:         env("BACKUP_DIR"),
+		DontExport:        os.Getenv("DONT_EXPORT") == "true",
+		CreateInterface:   os.Getenv("CREATE_INTERFACE") == "true",
+	}
 	files := find(os.Getenv("INPUT_FOLDER"), ".go")
 	goFiles, err := goParser.ParseFiles(files)
 
@@ -72,7 +110,7 @@ func main() {
 	params.Imports = Imports
 	params.Structs = Structs
 	params.StructNames = StructNames
-	params.Output = os.Getenv("OUTPUT_FILE")
+	params.Envs = envs
 
 	const generateFunc = `
 		package main
@@ -89,10 +127,17 @@ func main() {
 
 		func main() {
 			t := typescriptify.New()
-			t.CreateInterface = true
+			t.Suffix = {{.Envs.Suffix}}
+			t.Prefix = {{.Envs.Prefix}}
+			t.Indent = {{.Envs.Indent}}
+			t.CreateFromMethod = {{.Envs.CreateFromMethod}}
+			t.CreateConstructor = {{.Envs.CreateConstructor}}
+			t.DontExport = {{.Envs.DontExport}}
+			t.CreateInterface = {{.Envs.CreateInterface}}
+
 			{{ range .StructNames }}	t.Add({{ . }}{})
 			{{ end }}
-			err := t.ConvertToFile("{{.Output}}.ts")
+			err := t.ConvertToFile("{{.Envs.Output}}.ts")
 			if err != nil {
 				panic(err.Error())
 			}
@@ -103,7 +148,7 @@ func main() {
 	populatedFunc := template.Must(template.New("").Parse(generateFunc))
 	var tpl bytes.Buffer
 	if err := populatedFunc.Execute(&tpl, params); err != nil {
-		log.Panic()
+		log.Fatal(err)
 	}
 
 	const tempFileName = "generate-types.go"
